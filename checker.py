@@ -203,10 +203,9 @@ async def login(page, id: str, password: str):
         if status == "purchase_page":
             return True
         elif status == "repair_iframe":
-            cancel_btn = frame_locator.frame_locator(
-                'iframe#repairFrame').locator('button.nav-cancel')
-            await cancel_btn.click()
-            await cancel_btn.click()
+            repairFrame = frame_locator.frame_locator('iframe#repairFrame')
+            await repairFrame.locator('button#other-options-button').click()
+            await repairFrame.locator('button#dont-upgrade-button').click()
             return True
         elif status == "error_login":
             for selector in ['.idms-error', '#errMsg']:
@@ -252,9 +251,8 @@ async def process_account(playwright, account: Dict) -> Dict:
                 "args": [
                     "--disable-blink-features=AutomationControlled",
                     "--no-sandbox",
-                    "--disable-gpu",
-                    "--disable-dev-shm-usage",
-                    "--disable-images"
+                    "--disable-infobars",
+                    "--window-size=1280,800"
                 ]
             }
             if proxy:
@@ -264,14 +262,15 @@ async def process_account(playwright, account: Dict) -> Dict:
             context = await browser.new_context(
                 bypass_csp=True,
                 user_agent=UserAgent().random,
+                viewport={"width": 1280, "height": 800},
             )
 
-            # 拦截无用资源
-            await context.route(
-                "**/*",
-                lambda route: route.abort() if route.request.resource_type in ["image", "media", "font", "stylesheet"]
-                else route.continue_()
-            )
+            # 反检测脚本注入
+            await context.add_init_script("""
+                Object.defineProperty(navigator, 'webdriver', {
+                    get: () => undefined
+                });
+            """)
 
             page = await context.new_page()
 
