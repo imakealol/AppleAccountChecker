@@ -148,6 +148,7 @@ async def login(page, id: str, password: str):
 
         # 输入用户名
         await frame_locator.locator('#account_name_text_field').fill(id)
+        time.sleep(random.uniform(1, MIN_DELAY))
         await frame_locator.locator('button#sign-in').click()
 
         # 等待下一步
@@ -175,7 +176,7 @@ async def login(page, id: str, password: str):
         checks = [
             ('.idms-error', 'error_login', False),
             ('#errMsg', 'error_login', False),
-            ('iframe#repairFrame', 'repair_iframe', False),
+            ('iframe#account-repair-widget-iFrame', 'repair_iframe', False),
             ('div.verify-phone', 'phone_verification', False),
             ('div.verify-device', 'device_verification', False),
             ('div#acc-locked', 'account_locked', False),
@@ -203,7 +204,8 @@ async def login(page, id: str, password: str):
         if status == "purchase_page":
             return True
         elif status == "repair_iframe":
-            repairFrame = frame_locator.frame_locator('iframe#repairFrame')
+            repairFrame = frame_locator.frame_locator(
+                'iframe#account-repair-widget-iFrame')
             await repairFrame.locator('button#other-options-button').click()
             await repairFrame.locator('button#dont-upgrade-button').click()
             return True
